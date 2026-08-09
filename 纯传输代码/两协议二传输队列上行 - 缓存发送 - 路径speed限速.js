@@ -538,6 +538,15 @@ const handleWebSocketConn = async (webSocket, request) => {
     webSocket.addEventListener("close", close);
 };
 const xhttpHeaders = {'Content-Type': 'application/octet-stream', 'grpc-status': '0', 'X-Accel-Buffering': 'no', 'Cache-Control': 'no-store'};
+const generateRandomBase64 = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const len = Math.floor(Math.random() * (128 - 16 + 1)) + 16;
+    let result = '';
+    for (let i = 0; i < len; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
 const pipeToWithPrefix = async (readable, writable, prefixes, options) => {
     const writer = writable.getWriter();
     try {
@@ -608,7 +617,9 @@ const handleXhttpPost = async (request) => {
             used += value.byteLength;
         }
     })().catch(close);
-    return new Response(bridge.readable, {headers: xhttpHeaders});
+    const reqUrl = new URL(request.url);
+    const ResponseUrl = `${reqUrl.origin}/?bs64=${generateRandomBase64()}`;
+    return new Response(bridge.readable, {headers: {...xhttpHeaders, 'ResponseUrl': ResponseUrl}});
 };
 export default {
     async fetch(request) {
